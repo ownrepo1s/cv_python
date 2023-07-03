@@ -1,112 +1,126 @@
-cv_data = """
-Stefan Szekeres
-stefan.szekeres@gmail.com +40 737 41 79 51
+from flask import Flask, Response, json
 
-https://linkedin.com/in/stefanszekeres
+from cv_data import cv_text
 
-Summary
-Python | Objective-C | C++ developer with automation
-
-Experience
-macOS python developer automation (fully remote)
-Interai
-Oct 2020 – Nov 2022 (2 yrs 2 mos)
-
-The main driver for automation was Chromium.
-Two aspects:
-
-1. Code review / code quality wise, similar with the Chromium project guidelines
-2. Working with Chromium
-
-1. I have used many of the Chromium project guidelines in our guidelines at Interai in order to have a high quality, optimized, tested, easy to read, fast, correct code base.
-
-2. The main driver of the project I worked on was automating the Chromium process on macOS and control it from outside the process via Inter Process Communication (XPC on macOS). I wrote an Objective-C library from scratch that would be loaded by the Chromium project, and that library would be controlled from outside the process via python and another library I wrote in Objective-C and Objective-C++ for XPC communication.
-
-macOS developer
-Bitdefender
-Jun 2017 – Jun 2021 (4 yrs 1 mo)
-
-Objective-C and C++ macOS developer
-I was involved in Python testing and programming in Objective-C, Objective-C++, and C++. 
-The project was intricate, containing numerous linked libraries and tools. 
-We subsequently refactored and restructured these to foster a more interactive, plug-and-play developer environment. 
-We adhered to Agile methodologies in our workflow. 
-To provide a comprehensive overview of the design, I employed UML diagrams and generated source code documentation. 
-I was instrumental in smoothing out communication between teams responsible for providing libraries and our integration team.
-
-In addition to the primary responsibilities, I also took part in iOS and Android side projects. 
-Gained exposure to Linux and Unix systems, as well as integrating with the Atlassian suite including Bamboo, Jira, Confluence, and Bitbucket. 
-I contributed to the construction of the CI/CD pipeline for mobile and macOS applications.
-
-Developer
-Luxoft
-Nov 2014 – 2016 (2 yrs)
-
-macOS - SIP phone - Avaya One-X Communicator for mac
-Objective-C with C++ libraries
-
-I contributed to the development of Avaya One-X Communicator for Mac, a communication application akin to Skype, featuring chat and screen-sharing functionalities for macOS. Along with my team, I designed, tested, and architected the remote desktop solution, employing Agile methodologies throughout our process. We initially used Maven for version control before transitioning to Git. The development was conducted in Objective-C, Objective-C++, and C++, while Linux tools were used for maintaining the CI/CD environment. 
+MINIMUM_LINES_CV = 5
 
 
-During my two-year tenure on this project, the team size varied between four and eight members. My role was multifaceted, encompassing tasks such as development, testing, documentation, and architectural design. I also served as the acting team lead for a compact team of three developers. A crucial part of my responsibilities involved ensuring the product requirements aligned with the client expectations.
-Essentially, I served a dual role as both a developer and a DevOps engineer.
-
-Software Developer
-Zece si Fiii
-2014 – Nov 2014 (less than a year)
-Objective-c with Cocoa Touch & Android (JAVA)
-
-As the sole developer for both iOS and Android platforms, I mentored the team on leveraging Git for source control and guided them through manual UX/UI testing. The team structure comprised of myself and a colleague responsible for developing the server, which provided services consumed by the apps I constructed. Primarily, I worked on applications such as radios and nautical navigation apps tailored for cruise ships.
-
-Intern
-Microchip Technology Inc.
-Jun 2013 – Aug 2013 (3 mos)
-pcb design and programming
-
-Education
-University of Bucharest
-Bachelor's degree, Mathematics and Computer Science
-2015 – 2020
-
-Polytechnic University of Bucharest
-Computer Science
-
-2011 – 2014
-
-Universitatea „Politehnica” din Timișoara
-2010 – 2011
-
-Colegiul Național "Constantin Diaconovici Loga" Timișoara
-Baccalaureate, Mathematics and Computer Science
-
-2006 – 2010
-
-Honors & awards
-Premiul al II-lea la Olimpiada Judeteana de Fizica - Olimpiada Nationala de Fizica
-2005
-
-Diploma de Excelenta - Olimpiada Nationala de Fizica - Olimpiada Nationala de Fizica
-Mar 2005
-
-Locul I - Concursul National de Fizica PHI - Etapa Nationala
-2006
-
-Locul I - Concursul National de Fizica PHI - Etapa Judeteana
-2006
-
-Premiul I la Concursul Judetean de Chimie "Iancu Horescu"
-2006
+def print_message_before_app_run() -> None:
+    print('Welcome to my CV. You can access the following REST JSON in browser or with curl'
+          '\n1. http://127.0.0.1:5000/personal for personal information'
+          '\n2. http://127.0.0.1:5000/experience for experience information'
+          '\n3. http://127.0.0.1:5000/education for education information'
+          )
 
 
-Premiul al III-lea la Concursul National de Fizica PHI - Etapa Nationala
-2007
+# Create the Flask App
+app = Flask(__name__)
 
-Premiul I la Concursul National de Fizica PHI - Etapa Judeteana
-Jan 2007
+# Print a welcome message
+print_message_before_app_run()
 
-"""
+sections = {
+    'personal': [],
+    'experience': [],
+    'education': [],
+}
 
 
-# Press the green button in the gutter to run the script.
+def parse_cv_text(text: str) -> None:
+    """
+    Algorithm:
+    Input: a Curriculum Vitae (CV) via a multi line string.
+    Given the sections (private, experience, education), we iterate over each line of the CV,
+    if one of the line is exactly a match to the sections - in lowercase, we mark as found the current section;
+    the first section, by default, is "personal", any line after a section is the section string data
+    - we append them as an array
+
+    Assumptions:
+    1. We have a string with multiple lines
+    2. A section, by definition, is a word, in lower case, matching a full line
+    2. The first section is assumed 'personal' by default
+    3. There are optionally other sections in the string, different from 'personal'
+    4. There are at least MINIMUM_LINES_CV lines in the CV
+
+    Output:
+    We alter a global Dict[section_name:Array] called sections
+
+    :param text: Input CV data
+    :exception If the number of lines in the CV is <= than the MINIMUM_LINES_CV constant, it throws
+    :return: None
+    """
+    if len(text.split('\n')) <= MINIMUM_LINES_CV:
+        raise Exception(f'The CV contains only {MINIMUM_LINES_CV} lines of text, are you sure this is a valid CV?')
+
+    sections_keys = list(sections.keys())
+    current_section = 'personal'  # default section
+
+    # loop through the text by lines
+    for line in text.split('\n'):
+        # clean the line
+        line = line.strip()
+
+        if line.lower() in sections_keys:
+            current_section = line.lower()
+        elif line:
+            sections[current_section].append(line)
+
+
+# Parse the CV text
+parse_cv_text(text=cv_text)
+
+
+@app.route('/personal', methods=['GET'])
+def personal():
+    return Response(
+        json.dumps({'Personal': sections['personal']}, ensure_ascii=False, indent=4),
+        mimetype='application/json'
+    )
+
+
+@app.route('/experience', methods=['GET'])
+def experience():
+    return Response(
+        json.dumps({'Experience': sections['experience']}, ensure_ascii=False, indent=4),
+        mimetype='application/json'
+    )
+
+
+@app.route('/education', methods=['GET'])
+def education():
+    return Response(
+        json.dumps({'Education': sections['education']}, ensure_ascii=False, indent=4),
+        mimetype='application/json'
+    )
+
+
 if __name__ == '__main__':
-    print(cv_data)
+    """
+    This app will create a REST JSON server on 127.0.0.1 with the following endpoints:
+    
+    /personal
+    /experience
+    /education
+    
+    Based on a Curriculum Vitae.
+    
+    The input for this script is a text string contained in the cv_text variable.
+    
+    By parsing the text with the parse_cv_text function, we get the following structure:
+    1. For /personal : Dictionary["Personal":Array[strings]]
+    2. For /experience : Dictionary["Experience":Array[strings]]
+    3. For /education : Dictionary["Education":Array[strings]]
+    
+    For example:
+    {
+        "Personal": [
+            "first_name last_name",
+            "email telephone",
+            "linkedin_url",
+            "Summary",
+            "summary_data"
+        ]
+    }
+    """
+
+    app.run(debug=True)
