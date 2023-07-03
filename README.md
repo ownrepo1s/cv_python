@@ -31,8 +31,10 @@ Interview task
 # How?
 1. Clone this repository with `git clone https://github.com/ownrepo1s/cv_python.git`
 2. Open the root repository
-3. Run the command `flask run`
-4. You will get the output:
+3. Initiate the venv
+4. Install flask
+5. Run the command `flask run`
+6. You will get the output:
 ```
 Welcome to my CV. You can access the following REST JSON in browser or with curl
 1. http://127.0.0.1:5000/personal for personal information
