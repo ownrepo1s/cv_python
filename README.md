@@ -47,4 +47,8 @@ WARNING: This is a development server. Do not use it in a production deployment.
 ```
 5. Browse the URLs or use `curl` to GET to access the endpoints
 
+# Tests
+1. Install the `pytest` package
+2. Run tests
+
 Have a nice day!
